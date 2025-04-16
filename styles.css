@@ -225,4 +225,44 @@ h1 {
     100% {
         background-color: rgba(224, 224, 224, 0.8);
     }
+}
+
+.cell.hint {
+    animation: hint 1s ease-in-out infinite;
+    border: 3px solid #FF9800;
+}
+
+@keyframes hint {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 152, 0, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 152, 0, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 152, 0, 0.4);
+    }
+}
+
+.hint-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background-color: #FF9800;
+    color: white;
+}
+
+.hint-button:hover {
+    background-color: #F57C00;
+}
+
+.hint-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 } 

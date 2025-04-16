@@ -20,11 +20,13 @@ class LianLianKan {
         const backgroundPreview = document.getElementById('backgroundPreview');
         const uploadStatus = document.getElementById('uploadStatus');
         const backgroundStatus = document.getElementById('backgroundStatus');
+        const hintButton = document.getElementById('hintButton');
 
         uploadBtn.addEventListener('change', (e) => this.handleImageUpload(e, imagePreview, uploadStatus, startBtn));
         backgroundBtn.addEventListener('change', (e) => this.handleBackgroundUpload(e, backgroundPreview, backgroundStatus));
         startBtn.addEventListener('click', () => this.startGame());
         shuffleBtn.addEventListener('click', () => this.shuffleRemaining());
+        hintButton.addEventListener('click', () => this.showHint());
     }
 
     handleBackgroundUpload(event, previewContainer, statusElement) {
@@ -128,6 +130,10 @@ class LianLianKan {
         // 启用打乱按钮
         const shuffleBtn = document.getElementById('shuffleButton');
         shuffleBtn.disabled = false;
+
+        // 启用提示按钮
+        const hintButton = document.getElementById('hintButton');
+        hintButton.disabled = false;
     }
 
     createBoard() {
@@ -441,6 +447,44 @@ class LianLianKan {
 
         // 重新渲染游戏板
         this.renderBoard();
+    }
+
+    findHintPath() {
+        const visibleBlocks = Array.from(document.querySelectorAll('.cell:not(.hidden)'));
+        for (let i = 0; i < visibleBlocks.length; i++) {
+            for (let j = i + 1; j < visibleBlocks.length; j++) {
+                const block1 = visibleBlocks[i];
+                const block2 = visibleBlocks[j];
+                const row1 = parseInt(block1.dataset.row);
+                const col1 = parseInt(block1.dataset.col);
+                const row2 = parseInt(block2.dataset.row);
+                const col2 = parseInt(block2.dataset.col);
+                
+                // 确保两个方块都是可见的，并且有图片
+                if (this.board[row1][col1].visible && this.board[row2][col2].visible &&
+                    this.board[row1][col1].value !== null && this.board[row2][col2].value !== null &&
+                    this.board[row1][col1].value === this.board[row2][col2].value && 
+                    this.canConnect(row1, col1, row2, col2)) {
+                    return [block1, block2];
+                }
+            }
+        }
+        return null;
+    }
+
+    showHint() {
+        const hintPath = this.findHintPath();
+        if (hintPath) {
+            const [block1, block2] = hintPath;
+            block1.classList.add('hint');
+            block2.classList.add('hint');
+            setTimeout(() => {
+                block1.classList.remove('hint');
+                block2.classList.remove('hint');
+            }, 2000);
+        } else {
+            alert('没有可消除的方块对！');
+        }
     }
 }
 
