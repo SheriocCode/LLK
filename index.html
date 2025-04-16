@@ -8,6 +8,19 @@
 </head>
 <body>
     <div class="container">
+        <div class="game-info">
+            <div class="timer">
+                <span>剩余时间：</span>
+                <span id="timeLeft">60</span>
+                <span>秒</span>
+            </div>
+            <div class="score">
+                <span>当前积分：</span>
+                <span id="currentScore">0</span>
+                <span>/</span>
+                <span id="targetScore">60</span>
+            </div>
+        </div>
         <div class="upload-section">
             <h1>水果连连看</h1>
             <div class="upload-row">
@@ -34,10 +47,18 @@
                 <button id="startGame" class="start-button" disabled>开始游戏</button>
                 <button id="shuffleButton" class="shuffle-button" disabled>打乱剩余块</button>
                 <button id="hintButton" class="hint-button" disabled>提示</button>
+                <button id="modeButton" class="mode-button">切换模式</button>
             </div>
         </div>
         <div class="game-container">
             <div id="gameBoard" class="game-board"></div>
+        </div>
+        <div class="history-panel">
+            <h2>历史记录</h2>
+            <div class="history-list" id="historyList">
+                <!-- 历史记录将通过 JavaScript 动态添加 -->
+            </div>
+            <button id="clearHistory" class="clear-history-button">清空记录</button>
         </div>
     </div>
     <script src="script.js"></script>

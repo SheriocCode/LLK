@@ -7,6 +7,12 @@ class LianLianKan {
         this.rows = 10;
         this.cols = 12;
         this.totalPairs = 60;
+        this.isTimedMode = false;
+        this.timeLeft = 60;
+        this.currentScore = 0;
+        this.targetScore = 60;
+        this.timer = null;
+        this.history = this.loadHistory();
         this.initializeGame();
     }
 
@@ -21,12 +27,17 @@ class LianLianKan {
         const uploadStatus = document.getElementById('uploadStatus');
         const backgroundStatus = document.getElementById('backgroundStatus');
         const hintButton = document.getElementById('hintButton');
+        const modeButton = document.getElementById('modeButton');
+        const clearHistoryButton = document.getElementById('clearHistory');
 
         uploadBtn.addEventListener('change', (e) => this.handleImageUpload(e, imagePreview, uploadStatus, startBtn));
         backgroundBtn.addEventListener('change', (e) => this.handleBackgroundUpload(e, backgroundPreview, backgroundStatus));
         startBtn.addEventListener('click', () => this.startGame());
         shuffleBtn.addEventListener('click', () => this.shuffleRemaining());
         hintButton.addEventListener('click', () => this.showHint());
+        modeButton.addEventListener('click', () => this.toggleGameMode());
+        clearHistoryButton.addEventListener('click', () => this.clearHistory());
+        this.updateHistoryDisplay();
     }
 
     handleBackgroundUpload(event, previewContainer, statusElement) {
@@ -127,13 +138,14 @@ class LianLianKan {
         this.createBoard();
         this.renderBoard();
         
-        // 启用打乱按钮
         const shuffleBtn = document.getElementById('shuffleButton');
-        shuffleBtn.disabled = false;
-
-        // 启用提示按钮
         const hintButton = document.getElementById('hintButton');
+        shuffleBtn.disabled = false;
         hintButton.disabled = false;
+
+        if (this.isTimedMode) {
+            this.startTimer();
+        }
     }
 
     createBoard() {
@@ -223,18 +235,21 @@ class LianLianKan {
             return false;
         }
 
-        // 检查一条直线连接
+        // 按路径长度优先级检查
+        // 1. 直线连接
         if (this.checkStraightLine(row1, col1, row2, col2)) {
             return true;
         }
 
-        // 检查一个拐点连接
-        if (this.checkOneCorner(row1, col1, row2, col2)) {
+        // 2. 一个拐点连接
+        const oneCorner = this.checkOneCorner(row1, col1, row2, col2);
+        if (oneCorner) {
             return true;
         }
 
-        // 检查两个拐点连接
-        if (this.checkTwoCorners(row1, col1, row2, col2)) {
+        // 3. 两个拐点连接
+        const twoCorners = this.checkTwoCorners(row1, col1, row2, col2);
+        if (twoCorners) {
             return true;
         }
 
@@ -242,85 +257,104 @@ class LianLianKan {
     }
 
     checkStraightLine(row1, col1, row2, col2) {
+        // 检查是否是直线
+        if (row1 !== row2 && col1 !== col2) {
+            return false;
+        }
+
+        // 检查路径上是否有其他方块阻挡
         if (row1 === row2) {
+            // 水平方向
             const minCol = Math.min(col1, col2);
             const maxCol = Math.max(col1, col2);
             for (let col = minCol + 1; col < maxCol; col++) {
-                if (this.board[row1][col].visible) return false;
+                if (this.board[row1][col].visible) {
+                    return false;
+                }
             }
-            return true;
-        }
-
-        if (col1 === col2) {
+        } else {
+            // 垂直方向
             const minRow = Math.min(row1, row2);
             const maxRow = Math.max(row1, row2);
             for (let row = minRow + 1; row < maxRow; row++) {
-                if (this.board[row][col1].visible) return false;
+                if (this.board[row][col1].visible) {
+                    return false;
+                }
             }
-            return true;
         }
 
-        return false;
+        return true;
     }
 
     checkOneCorner(row1, col1, row2, col2) {
         // 检查水平拐点
-        if (this.checkStraightLine(row1, col1, row1, col2) && 
-            this.checkStraightLine(row1, col2, row2, col2) && 
-            !this.board[row1][col2].visible) {
-            return true;
+        if (!this.board[row1][col2].visible &&
+            this.checkStraightLine(row1, col1, row1, col2) && 
+            this.checkStraightLine(row1, col2, row2, col2)) {
+            return { corner1: { row: row1, col: col2 } };
         }
 
         // 检查垂直拐点
-        if (this.checkStraightLine(row1, col1, row2, col1) && 
-            this.checkStraightLine(row2, col1, row2, col2) && 
-            !this.board[row2][col1].visible) {
-            return true;
+        if (!this.board[row2][col1].visible &&
+            this.checkStraightLine(row1, col1, row2, col1) && 
+            this.checkStraightLine(row2, col1, row2, col2)) {
+            return { corner1: { row: row2, col: col1 } };
         }
 
-        return false;
+        return null;
     }
 
     checkTwoCorners(row1, col1, row2, col2) {
         // 检查所有可能的两个拐点路径
         for (let i = 0; i < this.rows; i++) {
-            // 检查第一个拐点 (row1, col1) -> (i, col1) -> (i, col2) -> (row2, col2)
-            if (!this.board[i][col1].visible && !this.board[i][col2].visible) {
-                if (this.checkStraightLine(row1, col1, i, col1) && 
-                    this.checkStraightLine(i, col1, i, col2) && 
-                    this.checkStraightLine(i, col2, row2, col2)) {
-                    return true;
+            for (let j = 0; j < this.cols; j++) {
+                // 确保拐点位置没有方块
+                if (!this.board[i][j].visible) {
+                    // 检查第一种情况：水平-垂直-水平
+                    if (i !== row1 && j !== col2 && 
+                        this.checkStraightLine(row1, col1, row1, j) && 
+                        this.checkStraightLine(row1, j, i, j) && 
+                        this.checkStraightLine(i, j, row2, col2) &&
+                        !this.board[row1][j].visible) {
+                        return { corner1: { row: row1, col: j }, corner2: { row: i, col: j } };
+                    }
+                    
+                    // 检查第二种情况：垂直-水平-垂直
+                    if (i !== row2 && j !== col1 &&
+                        this.checkStraightLine(row1, col1, i, col1) && 
+                        this.checkStraightLine(i, col1, i, j) && 
+                        this.checkStraightLine(i, j, row2, col2) &&
+                        !this.board[i][col1].visible) {
+                        return { corner1: { row: i, col: col1 }, corner2: { row: i, col: j } };
+                    }
                 }
             }
         }
-
-        for (let j = 0; j < this.cols; j++) {
-            // 检查第一个拐点 (row1, col1) -> (row1, j) -> (row2, j) -> (row2, col2)
-            if (!this.board[row1][j].visible && !this.board[row2][j].visible) {
-                if (this.checkStraightLine(row1, col1, row1, j) && 
-                    this.checkStraightLine(row1, j, row2, j) && 
-                    this.checkStraightLine(row2, j, row2, col2)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return null;
     }
 
     removeCells(row1, col1, row2, col2) {
-        // 高亮显示连接路径
         this.highlightPath(row1, col1, row2, col2);
 
-        // 移除选中的单元格
         setTimeout(() => {
             this.board[row1][col1].visible = false;
             this.board[row2][col2].visible = false;
             this.renderBoard();
 
-            // 检查游戏是否结束
-            if (this.checkGameOver()) {
-                alert('恭喜你赢了！');
+            if (this.isTimedMode) {
+                this.currentScore += 2;
+                this.updateScoreDisplay();
+                
+                if (this.currentScore >= this.targetScore) {
+                    this.stopTimer();
+                    this.addToHistory(this.currentScore);
+                    alert('恭喜你完成了计时模式！');
+                    this.endGame();
+                }
+            } else {
+                if (this.checkGameOver()) {
+                    alert('恭喜你赢了！');
+                }
             }
         }, 500);
     }
@@ -329,78 +363,158 @@ class LianLianKan {
         // 获取连接路径上的所有单元格
         const path = this.getPath(row1, col1, row2, col2);
         
+        // 移除所有现有的高亮
+        document.querySelectorAll('.cell.highlight').forEach(cell => {
+            cell.classList.remove('highlight');
+        });
+
         // 高亮显示路径上的单元格
-        path.forEach(cell => {
-            const cellElement = document.querySelector(`.cell[data-row="${cell.row}"][data-col="${cell.col}"]`);
-            cellElement.classList.add('highlight');
+        path.forEach(point => {
+            const cellElement = document.querySelector(`.cell[data-row="${point.row}"][data-col="${point.col}"]`);
+            if (cellElement) {
+                cellElement.classList.add('highlight');
+            }
         });
 
         // 移除高亮效果
         setTimeout(() => {
-            path.forEach(cell => {
-                const cellElement = document.querySelector(`.cell[data-row="${cell.row}"][data-col="${cell.col}"]`);
-                cellElement.classList.remove('highlight');
+            path.forEach(point => {
+                const cellElement = document.querySelector(`.cell[data-row="${point.row}"][data-col="${point.col}"]`);
+                if (cellElement) {
+                    cellElement.classList.remove('highlight');
+                }
             });
         }, 500);
     }
 
     getPath(row1, col1, row2, col2) {
         const path = [];
-        
-        // 添加起点
         path.push({ row: row1, col: col1 });
 
-        // 如果是直线连接
         if (row1 === row2) {
+            // 水平直线
             const minCol = Math.min(col1, col2);
             const maxCol = Math.max(col1, col2);
             for (let col = minCol + 1; col < maxCol; col++) {
                 path.push({ row: row1, col });
             }
         } else if (col1 === col2) {
+            // 垂直直线
             const minRow = Math.min(row1, row2);
             const maxRow = Math.max(row1, row2);
             for (let row = minRow + 1; row < maxRow; row++) {
                 path.push({ row, col: col1 });
             }
         } else {
-            // 如果是拐点连接，需要找到拐点
-            let corner;
-            if (this.checkOneCorner(row1, col1, row1, col2)) {
-                corner = { row: row1, col: col2 };
-            } else if (this.checkOneCorner(row1, col1, row2, col1)) {
-                corner = { row: row2, col: col1 };
-            } else {
-                // 两个拐点的情况，需要找到中间点
-                for (let i = 0; i < this.rows; i++) {
-                    if (this.checkOneCorner(row1, col1, i, col2) && 
-                        this.checkStraightLine(i, col2, row2, col2)) {
-                        corner = { row: i, col: col2 };
-                        break;
+            // 尝试找到最短路径
+            let corners = this.checkOneCorner(row1, col1, row2, col2);
+            
+            if (!corners) {
+                corners = this.checkTwoCorners(row1, col1, row2, col2);
+            }
+
+            if (corners) {
+                if (corners.corner2) {
+                    // 双拐点路径
+                    // 第一段：起点到第一个拐点
+                    if (corners.corner1.row === row1) {
+                        // 水平移动
+                        const minCol = Math.min(col1, corners.corner1.col);
+                        const maxCol = Math.max(col1, corners.corner1.col);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: row1, col });
+                        }
+                    } else {
+                        // 垂直移动
+                        const minRow = Math.min(row1, corners.corner1.row);
+                        const maxRow = Math.max(row1, corners.corner1.row);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: col1 });
+                        }
                     }
-                }
-                if (!corner) {
-                    for (let j = 0; j < this.cols; j++) {
-                        if (this.checkOneCorner(row1, col1, row2, j) && 
-                            this.checkStraightLine(row2, j, row2, col2)) {
-                            corner = { row: row2, col: j };
-                            break;
+                    
+                    // 添加第一个拐点
+                    path.push(corners.corner1);
+                    
+                    // 第二段：第一个拐点到第二个拐点
+                    if (corners.corner2.row === corners.corner1.row) {
+                        // 水平移动
+                        const minCol = Math.min(corners.corner1.col, corners.corner2.col);
+                        const maxCol = Math.max(corners.corner1.col, corners.corner2.col);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: corners.corner1.row, col });
+                        }
+                    } else {
+                        // 垂直移动
+                        const minRow = Math.min(corners.corner1.row, corners.corner2.row);
+                        const maxRow = Math.max(corners.corner1.row, corners.corner2.row);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: corners.corner1.col });
+                        }
+                    }
+                    
+                    // 添加第二个拐点
+                    path.push(corners.corner2);
+                    
+                    // 第三段：第二个拐点到终点
+                    if (corners.corner2.row === row2) {
+                        // 水平移动
+                        const minCol = Math.min(corners.corner2.col, col2);
+                        const maxCol = Math.max(corners.corner2.col, col2);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: row2, col });
+                        }
+                    } else {
+                        // 垂直移动
+                        const minRow = Math.min(corners.corner2.row, row2);
+                        const maxRow = Math.max(corners.corner2.row, row2);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: corners.corner2.col });
+                        }
+                    }
+                } else {
+                    // 单拐点路径
+                    // 第一段：起点到拐点
+                    if (corners.corner1.row === row1) {
+                        // 水平移动
+                        const minCol = Math.min(col1, corners.corner1.col);
+                        const maxCol = Math.max(col1, corners.corner1.col);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: row1, col });
+                        }
+                    } else {
+                        // 垂直移动
+                        const minRow = Math.min(row1, corners.corner1.row);
+                        const maxRow = Math.max(row1, corners.corner1.row);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: col1 });
+                        }
+                    }
+                    
+                    // 添加拐点
+                    path.push(corners.corner1);
+                    
+                    // 第二段：拐点到终点
+                    if (corners.corner1.row === row2) {
+                        // 水平移动
+                        const minCol = Math.min(corners.corner1.col, col2);
+                        const maxCol = Math.max(corners.corner1.col, col2);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: row2, col });
+                        }
+                    } else {
+                        // 垂直移动
+                        const minRow = Math.min(corners.corner1.row, row2);
+                        const maxRow = Math.max(corners.corner1.row, row2);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: corners.corner1.col });
                         }
                     }
                 }
             }
-
-            // 添加拐点路径
-            if (corner) {
-                const path1 = this.getPath(row1, col1, corner.row, corner.col);
-                const path2 = this.getPath(corner.row, corner.col, row2, col2);
-                path.push(...path1.slice(1), ...path2.slice(1));
-            }
         }
 
-        // 添加终点
         path.push({ row: row2, col: col2 });
-
         return path;
     }
 
@@ -485,6 +599,128 @@ class LianLianKan {
         } else {
             alert('没有可消除的方块对！');
         }
+    }
+
+    toggleGameMode() {
+        this.isTimedMode = !this.isTimedMode;
+        const modeButton = document.getElementById('modeButton');
+        modeButton.textContent = this.isTimedMode ? '普通模式' : '计时模式';
+        
+        if (this.isTimedMode) {
+            this.resetTimer();
+            this.updateScoreDisplay();
+        } else {
+            this.stopTimer();
+            document.getElementById('timeLeft').textContent = '60';
+            document.getElementById('currentScore').textContent = '0';
+        }
+    }
+
+    startTimer() {
+        this.timeLeft = 60;
+        this.currentScore = 0;
+        this.updateTimerDisplay();
+        this.updateScoreDisplay();
+        
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            this.updateTimerDisplay();
+            
+            if (this.timeLeft <= 0) {
+                this.stopTimer();
+                if (this.currentScore < this.targetScore) {
+                    alert('时间到！游戏失败！');
+                } else {
+                    alert('恭喜你完成了计时模式！');
+                }
+                this.endGame();
+            }
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    resetTimer() {
+        this.stopTimer();
+        this.timeLeft = 60;
+        this.currentScore = 0;
+        this.updateTimerDisplay();
+        this.updateScoreDisplay();
+    }
+
+    updateTimerDisplay() {
+        document.getElementById('timeLeft').textContent = this.timeLeft;
+    }
+
+    updateScoreDisplay() {
+        document.getElementById('currentScore').textContent = this.currentScore;
+        document.getElementById('targetScore').textContent = this.targetScore;
+    }
+
+    endGame() {
+        const shuffleBtn = document.getElementById('shuffleButton');
+        const hintButton = document.getElementById('hintButton');
+        shuffleBtn.disabled = true;
+        hintButton.disabled = true;
+        
+        if (this.isTimedMode) {
+            this.stopTimer();
+            if (this.currentScore > 0) {
+                this.addToHistory(this.currentScore);
+            }
+        }
+    }
+
+    loadHistory() {
+        const historyJson = localStorage.getItem('lianliankan_history');
+        return historyJson ? JSON.parse(historyJson) : [];
+    }
+
+    saveHistory() {
+        localStorage.setItem('lianliankan_history', JSON.stringify(this.history));
+    }
+
+    addToHistory(score) {
+        const now = new Date();
+        const record = {
+            date: now.toLocaleString(),
+            score: score
+        };
+        this.history.unshift(record);
+        // 只保留最近20条记录
+        if (this.history.length > 20) {
+            this.history = this.history.slice(0, 20);
+        }
+        this.saveHistory();
+        this.updateHistoryDisplay();
+    }
+
+    clearHistory() {
+        if (confirm('确定要清空所有历史记录吗？')) {
+            this.history = [];
+            this.saveHistory();
+            this.updateHistoryDisplay();
+        }
+    }
+
+    updateHistoryDisplay() {
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+        
+        this.history.forEach(record => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <span class="date">${record.date}</span>
+                <span class="score">${record.score}分</span>
+            `;
+            historyList.appendChild(item);
+        });
     }
 }
 

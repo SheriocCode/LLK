@@ -265,4 +265,98 @@ h1 {
 .hint-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timer, .score {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.timer {
+    color: #e74c3c;
+}
+
+.score {
+    color: #2ecc71;
+}
+
+.mode-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background-color: #9b59b6;
+    color: white;
+}
+
+.mode-button:hover {
+    background-color: #8e44ad;
+}
+
+.history-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.history-panel h2 {
+    margin-bottom: 10px;
+    color: #333;
+    text-align: center;
+}
+
+.history-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    margin-bottom: 5px;
+    background-color: white;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.history-item .date {
+    color: #666;
+    font-size: 14px;
+}
+
+.history-item .score {
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+.clear-history-button {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 3px;
+    background-color: #e74c3c;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.clear-history-button:hover {
+    background-color: #c0392b;
 } 
