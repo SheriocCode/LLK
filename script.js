@@ -3,6 +3,8 @@ class LianLianKan {
         this.board = [];
         this.selectedCells = [];
         this.images = [];
+        this.backgroundImages = []; // 存储多张背景图片
+        this.currentBackgroundIndex = 0; // 当前背景图片索引
         this.backgroundImage = null;
         this.rows = 10;
         this.cols = 12;
@@ -29,6 +31,8 @@ class LianLianKan {
         const hintButton = document.getElementById('hintButton');
         const modeButton = document.getElementById('modeButton');
         const clearHistoryButton = document.getElementById('clearHistory');
+        const prevBackgroundBtn = document.getElementById('prevBackground');
+        const nextBackgroundBtn = document.getElementById('nextBackground');
 
         uploadBtn.addEventListener('change', (e) => this.handleImageUpload(e, imagePreview, uploadStatus, startBtn));
         backgroundBtn.addEventListener('change', (e) => this.handleBackgroundUpload(e, backgroundPreview, backgroundStatus));
@@ -37,47 +41,69 @@ class LianLianKan {
         hintButton.addEventListener('click', () => this.showHint());
         modeButton.addEventListener('click', () => this.toggleGameMode());
         clearHistoryButton.addEventListener('click', () => this.clearHistory());
+        prevBackgroundBtn.addEventListener('click', () => this.switchBackground(-1));
+        nextBackgroundBtn.addEventListener('click', () => this.switchBackground(1));
         this.updateHistoryDisplay();
     }
 
     handleBackgroundUpload(event, previewContainer, statusElement) {
-        const file = event.target.files[0];
+        const files = event.target.files;
         
         // 清空预览区域
         previewContainer.innerHTML = '';
+        this.backgroundImages = [];
         
-        if (!file) {
-            statusElement.textContent = '请选择一张背景图片！';
+        if (!files || files.length === 0) {
+            statusElement.textContent = '请选择背景图片！';
             statusElement.style.color = 'red';
             return;
         }
 
         // 验证文件类型
-        if (!file.type.startsWith('image/')) {
-            statusElement.textContent = '请选择图片文件！';
+        const invalidFiles = Array.from(files).filter(file => !file.type.startsWith('image/'));
+        if (invalidFiles.length > 0) {
+            statusElement.textContent = '请只选择图片文件！';
             statusElement.style.color = 'red';
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            previewContainer.appendChild(img);
-            
-            // 保存背景图片
-            this.backgroundImage = e.target.result;
-            
-            // 更新游戏板背景
-            if (this.backgroundImage) {
-                const gameBoard = document.querySelector('.game-board');
-                gameBoard.style.setProperty('--background-image', `url(${this.backgroundImage})`);
-            }
+        // 处理图片预览
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-image';
+                img.title = `背景 ${index + 1}`;
+                previewContainer.appendChild(img);
+                
+                // 保存背景图片URL
+                this.backgroundImages.push(e.target.result);
+                
+                // 如果是第一张图片，设置为当前背景
+                if (this.backgroundImages.length === 1) {
+                    this.setBackgroundImage(e.target.result);
+                }
 
-            statusElement.textContent = '背景图片上传成功！';
-            statusElement.style.color = '#4CAF50';
-        };
-        reader.readAsDataURL(file);
+                statusElement.textContent = `已上传${this.backgroundImages.length}张背景图片`;
+                statusElement.style.color = '#4CAF50';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    switchBackground(direction) {
+        if (this.backgroundImages.length === 0) return;
+        
+        this.currentBackgroundIndex = (this.currentBackgroundIndex + direction + this.backgroundImages.length) % this.backgroundImages.length;
+        this.setBackgroundImage(this.backgroundImages[this.currentBackgroundIndex]);
+    }
+
+    setBackgroundImage(imageUrl) {
+        this.backgroundImage = imageUrl;
+        const gameBoard = document.querySelector('.game-board');
+        gameBoard.style.setProperty('--background-image', `url(${imageUrl})`);
+        gameBoard.style.backgroundImage = `url(${imageUrl})`;
     }
 
     handleImageUpload(event, imagePreview, uploadStatus, startBtn) {
@@ -563,41 +589,40 @@ class LianLianKan {
         this.renderBoard();
     }
 
-    findHintPath() {
-        const visibleBlocks = Array.from(document.querySelectorAll('.cell:not(.hidden)'));
-        for (let i = 0; i < visibleBlocks.length; i++) {
-            for (let j = i + 1; j < visibleBlocks.length; j++) {
-                const block1 = visibleBlocks[i];
-                const block2 = visibleBlocks[j];
-                const row1 = parseInt(block1.dataset.row);
-                const col1 = parseInt(block1.dataset.col);
-                const row2 = parseInt(block2.dataset.row);
-                const col2 = parseInt(block2.dataset.col);
+    showHint() {
+        // 清除之前的高亮
+        document.querySelectorAll('.cell.highlight').forEach(cell => {
+            cell.classList.remove('highlight');
+        });
+
+        // 查找可以连接的对
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                if (!this.board[i][j].visible) continue;
                 
-                // 确保两个方块都是可见的，并且有图片
-                if (this.board[row1][col1].visible && this.board[row2][col2].visible &&
-                    this.board[row1][col1].value !== null && this.board[row2][col2].value !== null &&
-                    this.board[row1][col1].value === this.board[row2][col2].value && 
-                    this.canConnect(row1, col1, row2, col2)) {
-                    return [block1, block2];
+                for (let x = i + 1; x < this.rows; x++) {
+                    for (let y = 0; y < this.cols; y++) {
+                        if (!this.board[x][y].visible) continue;
+                        
+                        if (this.board[i][j].value === this.board[x][y].value) {
+                            if (this.canConnect(i, j, x, y)) {
+                                // 高亮显示这对可以连接的方块
+                                const cell1 = document.querySelector(`.cell[data-row="${i}"][data-col="${j}"]`);
+                                const cell2 = document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`);
+                                cell1.classList.add('highlight');
+                                cell2.classList.add('highlight');
+                                
+                                // 3秒后移除高亮
+                                setTimeout(() => {
+                                    cell1.classList.remove('highlight');
+                                    cell2.classList.remove('highlight');
+                                }, 3000);
+                                return;
+                            }
+                        }
+                    }
                 }
             }
-        }
-        return null;
-    }
-
-    showHint() {
-        const hintPath = this.findHintPath();
-        if (hintPath) {
-            const [block1, block2] = hintPath;
-            block1.classList.add('hint');
-            block2.classList.add('hint');
-            setTimeout(() => {
-                block1.classList.remove('hint');
-                block2.classList.remove('hint');
-            }, 2000);
-        } else {
-            alert('没有可消除的方块对！');
         }
     }
 
