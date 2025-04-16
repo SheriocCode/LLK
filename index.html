@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水果连连看</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="upload-section">
+            <h1>水果连连看</h1>
+            <div class="upload-row">
+                <div class="upload-container">
+                    <label for="imageUpload" class="upload-label">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">点击选择20张水果图片</span>
+                    </label>
+                    <input type="file" id="imageUpload" accept="image/*" multiple>
+                    <div id="imagePreview" class="image-preview"></div>
+                    <div id="uploadStatus" class="upload-status"></div>
+                </div>
+                <div class="upload-container">
+                    <label for="backgroundUpload" class="upload-label">
+                        <span class="upload-icon">🎨</span>
+                        <span class="upload-text">点击选择背景图片</span>
+                    </label>
+                    <input type="file" id="backgroundUpload" accept="image/*">
+                    <div id="backgroundPreview" class="background-preview"></div>
+                    <div id="backgroundStatus" class="upload-status"></div>
+                </div>
+            </div>
+            <div class="button-row">
+                <button id="startGame" class="start-button" disabled>开始游戏</button>
+                <button id="shuffleButton" class="shuffle-button" disabled>打乱剩余块</button>
+            </div>
+        </div>
+        <div class="game-container">
+            <div id="gameBoard" class="game-board"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
