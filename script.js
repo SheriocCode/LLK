@@ -298,6 +298,7 @@ class LianLianKan {
                     return false;
                 }
             }
+            return true;
         } else {
             // 垂直方向
             const minRow = Math.min(row1, row2);
@@ -307,9 +308,8 @@ class LianLianKan {
                     return false;
                 }
             }
+            return true;
         }
-
-        return true;
     }
 
     checkOneCorner(row1, col1, row2, col2) {
@@ -331,31 +331,44 @@ class LianLianKan {
     }
 
     checkTwoCorners(row1, col1, row2, col2) {
-        // 检查所有可能的两个拐点路径
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.cols; j++) {
-                // 确保拐点位置没有方块
-                if (!this.board[i][j].visible) {
-                    // 检查第一种情况：水平-垂直-水平
-                    if (i !== row1 && j !== col2 && 
-                        this.checkStraightLine(row1, col1, row1, j) && 
-                        this.checkStraightLine(row1, j, i, j) && 
-                        this.checkStraightLine(i, j, row2, col2) &&
-                        !this.board[row1][j].visible) {
-                        return { corner1: { row: row1, col: j }, corner2: { row: i, col: j } };
-                    }
-                    
-                    // 检查第二种情况：垂直-水平-垂直
-                    if (i !== row2 && j !== col1 &&
-                        this.checkStraightLine(row1, col1, i, col1) && 
-                        this.checkStraightLine(i, col1, i, j) && 
-                        this.checkStraightLine(i, j, row2, col2) &&
-                        !this.board[i][col1].visible) {
-                        return { corner1: { row: i, col: col1 }, corner2: { row: i, col: j } };
-                    }
+        // 检查垂直-水平-垂直的路径
+        for (let col = 0; col < this.cols; col++) {
+            // 跳过起点和终点的列，因为这些情况应该由单拐点处理
+            if (col === col1 || col === col2) continue;
+            
+            // 检查两个拐点位置是否为空
+            if (!this.board[row1][col].visible && !this.board[row2][col].visible) {
+                // 验证三段路径是否都通畅
+                if (this.checkStraightLine(row1, col1, row1, col) && 
+                    this.checkStraightLine(row1, col, row2, col) && 
+                    this.checkStraightLine(row2, col, row2, col2)) {
+                    return {
+                        corner1: { row: row1, col: col },
+                        corner2: { row: row2, col: col }
+                    };
                 }
             }
         }
+
+        // 检查水平-垂直-水平的路径
+        for (let row = 0; row < this.rows; row++) {
+            // 跳过起点和终点的行，因为这些情况应该由单拐点处理
+            if (row === row1 || row === row2) continue;
+            
+            // 检查两个拐点位置是否为空
+            if (!this.board[row][col1].visible && !this.board[row][col2].visible) {
+                // 验证三段路径是否都通畅
+                if (this.checkStraightLine(row1, col1, row, col1) && 
+                    this.checkStraightLine(row, col1, row, col2) && 
+                    this.checkStraightLine(row, col2, row2, col2)) {
+                    return {
+                        corner1: { row: row, col: col1 },
+                        corner2: { row: row, col: col2 }
+                    };
+                }
+            }
+        }
+
         return null;
     }
 
@@ -390,24 +403,24 @@ class LianLianKan {
         const path = this.getPath(row1, col1, row2, col2);
         
         // 移除所有现有的高亮
-        document.querySelectorAll('.cell.highlight').forEach(cell => {
-            cell.classList.remove('highlight');
+        document.querySelectorAll('.cell.highlight-path').forEach(cell => {
+            cell.classList.remove('highlight-path');
         });
 
         // 高亮显示路径上的单元格
         path.forEach(point => {
             const cellElement = document.querySelector(`.cell[data-row="${point.row}"][data-col="${point.col}"]`);
             if (cellElement) {
-                cellElement.classList.add('highlight');
+                cellElement.classList.add('highlight-path');
             }
         });
 
-        // 移除高亮效果
+        // 500ms后移除高亮效果
         setTimeout(() => {
             path.forEach(point => {
                 const cellElement = document.querySelector(`.cell[data-row="${point.row}"][data-col="${point.col}"]`);
                 if (cellElement) {
-                    cellElement.classList.remove('highlight');
+                    cellElement.classList.remove('highlight-path');
                 }
             });
         }, 500);
@@ -417,112 +430,57 @@ class LianLianKan {
         const path = [];
         path.push({ row: row1, col: col1 });
 
-        // 检查直线连接
-        if (row1 === row2) {
-            const minCol = Math.min(col1, col2);
-            const maxCol = Math.max(col1, col2);
-            for (let col = minCol + 1; col < maxCol; col++) {
-                path.push({ row: row1, col });
-            }
-        } else if (col1 === col2) {
-            const minRow = Math.min(row1, row2);
-            const maxRow = Math.max(row1, row2);
-            for (let row = minRow + 1; row < maxRow; row++) {
-                path.push({ row, col: col1 });
-            }
+        // 首先检查是否可以直线连接
+        if (this.checkStraightLine(row1, col1, row2, col2)) {
+            this.addPathPoints(path, row1, col1, row2, col2);
         } else {
             // 检查单拐点连接
             const oneCorner = this.checkOneCorner(row1, col1, row2, col2);
             if (oneCorner) {
                 const corner = oneCorner.corner1;
-                // 第一段：起点到拐点
-                if (corner.row === row1) {
-                    const minCol = Math.min(col1, corner.col);
-                    const maxCol = Math.max(col1, corner.col);
-                    for (let col = minCol + 1; col < maxCol; col++) {
-                        path.push({ row: row1, col });
-                    }
-                } else {
-                    const minRow = Math.min(row1, corner.row);
-                    const maxRow = Math.max(row1, corner.row);
-                    for (let row = minRow + 1; row < maxRow; row++) {
-                        path.push({ row, col: col1 });
-                    }
-                }
+                this.addPathPoints(path, row1, col1, corner.row, corner.col);
                 path.push(corner);
-                // 第二段：拐点到终点
-                if (corner.row === row2) {
-                    const minCol = Math.min(corner.col, col2);
-                    const maxCol = Math.max(corner.col, col2);
-                    for (let col = minCol + 1; col < maxCol; col++) {
-                        path.push({ row: row2, col });
-                    }
-                } else {
-                    const minRow = Math.min(corner.row, row2);
-                    const maxRow = Math.max(corner.row, row2);
-                    for (let row = minRow + 1; row < maxRow; row++) {
-                        path.push({ row, col: corner.col });
-                    }
-                }
+                this.addPathPoints(path, corner.row, corner.col, row2, col2);
             } else {
                 // 检查双拐点连接
                 const twoCorners = this.checkTwoCorners(row1, col1, row2, col2);
                 if (twoCorners) {
-                    const corner1 = twoCorners.corner1;
-                    const corner2 = twoCorners.corner2;
+                    const { corner1, corner2 } = twoCorners;
                     
-                    // 第一段：起点到第一个拐点
-                    if (corner1.row === row1) {
-                        const minCol = Math.min(col1, corner1.col);
-                        const maxCol = Math.max(col1, corner1.col);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: row1, col });
-                        }
-                    } else {
-                        const minRow = Math.min(row1, corner1.row);
-                        const maxRow = Math.max(row1, corner1.row);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: col1 });
-                        }
-                    }
+                    // 添加第一段路径（垂直或水平）
+                    this.addPathPoints(path, row1, col1, corner1.row, corner1.col);
                     path.push(corner1);
                     
-                    // 第二段：第一个拐点到第二个拐点
-                    if (corner2.row === corner1.row) {
-                        const minCol = Math.min(corner1.col, corner2.col);
-                        const maxCol = Math.max(corner1.col, corner2.col);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: corner1.row, col });
-                        }
-                    } else {
-                        const minRow = Math.min(corner1.row, corner2.row);
-                        const maxRow = Math.max(corner1.row, corner2.row);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: corner1.col });
-                        }
-                    }
+                    // 添加第二段路径（水平或垂直）
+                    this.addPathPoints(path, corner1.row, corner1.col, corner2.row, corner2.col);
                     path.push(corner2);
                     
-                    // 第三段：第二个拐点到终点
-                    if (corner2.row === row2) {
-                        const minCol = Math.min(corner2.col, col2);
-                        const maxCol = Math.max(corner2.col, col2);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: row2, col });
-                        }
-                    } else {
-                        const minRow = Math.min(corner2.row, row2);
-                        const maxRow = Math.max(corner2.row, row2);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: corner2.col });
-                        }
-                    }
+                    // 添加第三段路径（垂直或水平）
+                    this.addPathPoints(path, corner2.row, corner2.col, row2, col2);
                 }
             }
         }
 
         path.push({ row: row2, col: col2 });
         return path;
+    }
+
+    addPathPoints(path, row1, col1, row2, col2) {
+        if (row1 === row2) {
+            // 水平方向
+            const minCol = Math.min(col1, col2);
+            const maxCol = Math.max(col1, col2);
+            for (let col = minCol + 1; col < maxCol; col++) {
+                path.push({ row: row1, col });
+            }
+        } else if (col1 === col2) {
+            // 垂直方向
+            const minRow = Math.min(row1, row2);
+            const maxRow = Math.max(row1, row2);
+            for (let row = minRow + 1; row < maxRow; row++) {
+                path.push({ row, col: col1 });
+            }
+        }
     }
 
     checkGameOver() {
@@ -576,35 +534,46 @@ class LianLianKan {
             cell.classList.remove('highlight');
         });
 
-        // 查找可以连接的对
+        // 遍历所有可见的方块
+        const visibleBlocks = [];
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
-                if (!this.board[i][j].visible) continue;
-                
-                for (let x = i + 1; x < this.rows; x++) {
-                    for (let y = 0; y < this.cols; y++) {
-                        if (!this.board[x][y].visible) continue;
+                if (this.board[i][j].visible) {
+                    visibleBlocks.push({ row: i, col: j, value: this.board[i][j].value });
+                }
+            }
+        }
+
+        // 检查所有可能的配对
+        for (let i = 0; i < visibleBlocks.length; i++) {
+            for (let j = i + 1; j < visibleBlocks.length; j++) {
+                const block1 = visibleBlocks[i];
+                const block2 = visibleBlocks[j];
+
+                // 检查是否是相同的水果且可以连接
+                if (block1.value === block2.value && 
+                    this.canConnect(block1.row, block1.col, block2.row, block2.col)) {
+                    // 高亮显示这对可以连接的方块
+                    const cell1 = document.querySelector(`.cell[data-row="${block1.row}"][data-col="${block1.col}"]`);
+                    const cell2 = document.querySelector(`.cell[data-row="${block2.row}"][data-col="${block2.col}"]`);
+                    
+                    if (cell1 && cell2) {
+                        cell1.classList.add('highlight');
+                        cell2.classList.add('highlight');
                         
-                        if (this.board[i][j].value === this.board[x][y].value) {
-                            if (this.canConnect(i, j, x, y)) {
-                                // 高亮显示这对可以连接的方块
-                                const cell1 = document.querySelector(`.cell[data-row="${i}"][data-col="${j}"]`);
-                                const cell2 = document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`);
-                                cell1.classList.add('highlight');
-                                cell2.classList.add('highlight');
-                                
-                                // 3秒后移除高亮
-                                setTimeout(() => {
-                                    cell1.classList.remove('highlight');
-                                    cell2.classList.remove('highlight');
-                                }, 3000);
-                                return;
-                            }
-                        }
+                        // 1秒后移除高亮
+                        setTimeout(() => {
+                            cell1.classList.remove('highlight');
+                            cell2.classList.remove('highlight');
+                        }, 1000);
+                        return;
                     }
                 }
             }
         }
+
+        // 如果没有找到可以连接的对，可以给出提示
+        alert('当前没有可以连接的方块，请尝试重排！');
     }
 
     toggleGameMode() {

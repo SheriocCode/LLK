@@ -17,26 +17,29 @@ body {
     display: flex;
     gap: 20px;
     padding: 20px;
-    max-width: 1400px;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: flex-start;
 }
 
 .left-panel {
-    width: 300px;
+    width: 250px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
 .upload-section {
     background-color: white;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .image-upload, .background-upload {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .image-upload h3, .background-upload h3 {
@@ -45,19 +48,19 @@ body {
 }
 
 .image-preview, .background-preview {
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    padding: 10px;
+    gap: 4px;
+    padding: 8px;
     background-color: #f8f8f8;
     border-radius: 4px;
 }
 
 .image-preview img, .background-preview img {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     object-fit: cover;
     border-radius: 4px;
     cursor: pointer;
@@ -123,16 +126,18 @@ body {
 .game-board {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(10, 1fr);
-    gap: 2px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: repeat(10, minmax(0, 1fr));
+    gap: 1px;
     background-color: #fff;
-    padding: 10px;
+    padding: 0;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    min-width: 0;
-    min-height: 0;
     position: relative;
+    width: 680px;
+    height: 560px;
+    margin: 0;
+    overflow: hidden;
 }
 
 .game-board::before {
@@ -144,7 +149,7 @@ body {
     bottom: 0;
     background-size: cover;
     background-position: center;
-    opacity: 0.3;
+    opacity: 0.2;
     z-index: 1;
     pointer-events: none;
     border-radius: 8px;
@@ -152,25 +157,35 @@ body {
 
 .cell {
     aspect-ratio: 1;
-    background-color: #49454536;
-    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
     z-index: 2;
+    padding: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cell:hover {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cell img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 4px;
+    width: 95%;
+    height: 95%;
+    object-fit: contain;
+    border-radius: 2px;
     position: relative;
     z-index: 2;
+    transition: transform 0.2s ease;
 }
 
 .cell.selected {
@@ -178,20 +193,45 @@ body {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
+.cell.selected img {
+    transform: scale(1.05);
+}
+
 .cell.highlight {
-    background-color: #ffeb3b;
+    background-color: rgba(86, 51, 86, 0.187);
+    animation: highlightPulse 0.5s infinite;
+    transform-origin: center;
+}
+
+.cell.highlight-path {
+    background-color: rgba(255, 235, 59, 0.5);
+}
+
+@keyframes highlightPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
 }
 
 .right-panel {
-    width: 250px;
+    width: 200px;
+    flex-shrink: 0;
 }
 
 .history-section {
     background-color: white;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: 100%;
 }
 
 .history-section h3 {
@@ -200,9 +240,8 @@ body {
 }
 
 .history-list {
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
-    margin-bottom: 15px;
 }
 
 .history-item {
