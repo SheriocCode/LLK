@@ -66,6 +66,12 @@ body {
     border-radius: 8px;
     margin-bottom: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.image-preview::-webkit-scrollbar, .background-preview::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
 }
 
 .image-preview img, .background-preview img {
