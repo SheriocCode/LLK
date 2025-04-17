@@ -13,7 +13,7 @@ class LianLianKan {
         this.isTimedMode = false;
         this.timeLeft = 60;
         this.currentScore = 0;
-        this.targetScore = 60;
+        this.targetScore = 0;  // 移除目标分数
         this.timer = null;
         this.history = this.loadHistory();
         this.HINT_PENALTY = 5; // 使用提示的扣分数
@@ -46,7 +46,6 @@ class LianLianKan {
         modeButton.addEventListener('click', () => this.toggleGameMode());
         clearHistoryButton.addEventListener('click', () => this.clearHistory());
         
-        // 修复背景切换按钮的事件监听
         if (prevBackgroundBtn) {
             prevBackgroundBtn.addEventListener('click', () => this.switchBackground(-1));
         }
@@ -74,16 +73,14 @@ class LianLianKan {
         this.backgroundImages = [];
         
         if (!files || files.length === 0) {
-            statusElement.textContent = '请选择背景图片！';
-            statusElement.style.color = 'red';
+            alert('请选择背景图片！');
             return;
         }
 
         // 验证文件类型
         const invalidFiles = Array.from(files).filter(file => !file.type.startsWith('image/'));
         if (invalidFiles.length > 0) {
-            statusElement.textContent = '请只选择图片文件！';
-            statusElement.style.color = 'red';
+            alert('请只选择图片文件！');
             return;
         }
 
@@ -106,9 +103,6 @@ class LianLianKan {
                     this.setBackgroundImage(e.target.result);
                     img.classList.add('selected');
                 }
-
-                statusElement.textContent = `已上传${this.backgroundImages.length}张背景图片`;
-                statusElement.style.color = '#4CAF50';
             };
             reader.readAsDataURL(file);
         });
@@ -145,19 +139,23 @@ class LianLianKan {
         this.backgroundImage = imageUrl;
         const gameBoard = document.getElementById('gameBoard');
         if (gameBoard) {
-            // 直接设置背景图片
-            gameBoard.style.backgroundImage = `url(${imageUrl})`;
-            gameBoard.style.backgroundSize = 'cover';
-            gameBoard.style.backgroundPosition = 'center';
-            console.log('设置游戏板背景图片');
+            // 创建或更新背景层
+            let backgroundLayer = gameBoard.querySelector('.background-layer');
+            if (!backgroundLayer) {
+                backgroundLayer = document.createElement('div');
+                backgroundLayer.className = 'background-layer';
+                gameBoard.insertBefore(backgroundLayer, gameBoard.firstChild);
+            }
+            
+            backgroundLayer.style.backgroundImage = `url(${imageUrl})`;
             this.updateBackgroundOpacity();
         }
     }
 
     updateBackgroundOpacity() {
-        const gameBoard = document.getElementById('gameBoard');
-        if (gameBoard) {
-            gameBoard.style.opacity = this.backgroundOpacity;
+        const backgroundLayer = document.querySelector('.background-layer');
+        if (backgroundLayer) {
+            backgroundLayer.style.opacity = this.backgroundOpacity;
             console.log('设置背景透明度:', this.backgroundOpacity);
         }
     }
@@ -165,15 +163,13 @@ class LianLianKan {
     handleImageUpload(event, imagePreview, uploadStatus, startBtn) {
         const files = event.target.files;
         const previewContainer = imagePreview;
-        const statusElement = uploadStatus;
         
         // 清空预览区域
         previewContainer.innerHTML = '';
         this.images = [];
 
         if (files.length !== 20) {
-            statusElement.textContent = `请选择20张图片！当前选择了${files.length}张。`;
-            statusElement.style.color = 'red';
+            alert(`请选择20张图片！当前选择了${files.length}张。`);
             startBtn.disabled = true;
             return;
         }
@@ -181,8 +177,7 @@ class LianLianKan {
         // 验证文件类型
         const invalidFiles = Array.from(files).filter(file => !file.type.startsWith('image/'));
         if (invalidFiles.length > 0) {
-            statusElement.textContent = '请只选择图片文件！';
-            statusElement.style.color = 'red';
+            alert('请只选择图片文件！');
             startBtn.disabled = true;
             return;
         }
@@ -202,8 +197,6 @@ class LianLianKan {
                 
                 // 当所有图片都加载完成时
                 if (this.images.length === 20) {
-                    statusElement.textContent = '图片上传成功！点击"开始游戏"按钮开始游戏。';
-                    statusElement.style.color = '#4CAF50';
                     startBtn.disabled = false;
                 }
             };
@@ -217,8 +210,19 @@ class LianLianKan {
             return;
         }
 
+        // 保存当前背景状态
+        const currentBackground = this.backgroundImage;
+        const currentOpacity = this.backgroundOpacity;
+
         this.createBoard();
         this.renderBoard();
+        
+        // 恢复背景状态
+        if (currentBackground) {
+            this.setBackgroundImage(currentBackground);
+            this.backgroundOpacity = currentOpacity;
+            this.updateBackgroundOpacity();
+        }
         
         const shuffleBtn = document.getElementById('shuffleButton');
         const hintButton = document.getElementById('hintButton');
@@ -258,6 +262,15 @@ class LianLianKan {
     renderBoard() {
         const gameBoard = document.getElementById('gameBoard');
         gameBoard.innerHTML = '';
+
+        // 重新创建背景层
+        if (this.backgroundImage) {
+            const backgroundLayer = document.createElement('div');
+            backgroundLayer.className = 'background-layer';
+            backgroundLayer.style.backgroundImage = `url(${this.backgroundImage})`;
+            backgroundLayer.style.opacity = this.backgroundOpacity;
+            gameBoard.appendChild(backgroundLayer);
+        }
 
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
@@ -437,18 +450,11 @@ class LianLianKan {
             this.renderBoard();
 
             if (this.isTimedMode) {
-                this.currentScore += 5; // 消除一对得5分
+                this.currentScore += 5;
                 this.updateScoreDisplay();
-                
-                if (this.timeLeft <= 0) {
-                    this.stopTimer();
-                    this.addToHistory(this.currentScore);
-                    alert('时间到！游戏结束！');
-                    this.endGame();
-                }
             } else {
                 if (this.checkGameOver()) {
-                    alert('恭喜你赢了！');
+                    this.showModal('游戏结束', '恭喜你赢了！');
                 }
             }
         }, 500);
@@ -669,11 +675,9 @@ class LianLianKan {
             
             if (this.timeLeft <= 0) {
                 this.stopTimer();
-                if (this.currentScore < this.targetScore) {
-                    alert('时间到！游戏失败！');
-                } else {
-                    alert('恭喜你完成了计时模式！');
-                }
+                const message = `时间到！\n最终得分：${this.currentScore}分\n${this.currentScore >= 60 ? '恭喜你完成了计时模式！' : '继续努力！'}`;
+                this.showModal('游戏结束', message);
+                this.addToHistory(this.currentScore);
                 this.endGame();
             }
         }, 1000);
@@ -699,8 +703,16 @@ class LianLianKan {
     }
 
     updateScoreDisplay() {
-        document.getElementById('currentScore').textContent = this.currentScore;
-        document.getElementById('targetScore').textContent = this.targetScore;
+        const currentScoreElement = document.getElementById('currentScore');
+        const targetScoreElement = document.getElementById('targetScore');
+        
+        if (currentScoreElement) {
+            currentScoreElement.textContent = this.currentScore;
+        }
+        
+        if (targetScoreElement) {
+            targetScoreElement.textContent = this.isTimedMode ? '∞' : this.targetScore;
+        }
     }
 
     endGame() {
@@ -761,6 +773,37 @@ class LianLianKan {
                 <span class="score">${record.score}分</span>
             `;
             historyList.appendChild(item);
+        });
+    }
+
+    showModal(title, message) {
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalClose = document.getElementById('modalClose');
+
+        if (!modalOverlay || !modalTitle || !modalMessage || !modalClose) {
+            console.error('Modal elements not found');
+            return;
+        }
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modalOverlay.style.display = 'flex';
+
+        // 移除之前的事件监听器
+        const newCloseBtn = modalClose.cloneNode(true);
+        modalClose.parentNode.replaceChild(newCloseBtn, modalClose);
+
+        // 添加新的事件监听器
+        newCloseBtn.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
         });
     }
 }

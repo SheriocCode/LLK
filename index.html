@@ -11,26 +11,29 @@
     <div class="container">
         <div class="left-panel">
             <div class="upload-section">
-                <div class="image-upload">
-                    <h3>上传图片</h3>
-                    <input type="file" id="imageUpload" multiple accept="image/*">
-                    <div class="image-preview" id="imagePreview"></div>
-                    <p id="uploadStatus">请上传20张图片</p>
+                <div class="upload-header">
+                    <h3>上传区域</h3>
                 </div>
-                <div class="background-upload">
-                    <h3>背景图片</h3>
-                    <input type="file" id="backgroundUpload" multiple accept="image/*">
-                    <div class="background-preview" id="backgroundPreview"></div>
-                    <div class="background-controls">
-                        <button id="prevBackground" class="background-btn">上一张</button>
-                        <button id="nextBackground" class="background-btn">下一张</button>
+                <div class="upload-content">
+                    <div class="image-upload">
+                        <h4>上传图片</h4>
+                        <input type="file" id="imageUpload" multiple accept="image/*">
+                        <div class="image-preview" id="imagePreview"></div>
                     </div>
-                    <div class="background-opacity">
-                        <label for="opacitySlider">背景透明度：</label>
-                        <input type="range" id="opacitySlider" min="0" max="100" value="20">
-                        <span id="opacityValue">20%</span>
+                    <div class="background-upload">
+                        <h4>背景图片</h4>
+                        <input type="file" id="backgroundUpload" multiple accept="image/*">
+                        <div class="background-preview" id="backgroundPreview"></div>
+                        <div class="background-controls">
+                            <button id="prevBackground" class="background-btn">上一张</button>
+                            <button id="nextBackground" class="background-btn">下一张</button>
+                        </div>
+                        <div class="background-opacity">
+                            <label for="opacitySlider">背景透明度：</label>
+                            <input type="range" id="opacitySlider" min="0" max="100" value="20">
+                            <span id="opacityValue">20%</span>
+                        </div>
                     </div>
-                    <p id="backgroundStatus">请上传背景图片</p>
                 </div>
             </div>
             <div class="game-controls">
@@ -60,6 +63,13 @@
                 <button id="clearHistory">清空历史</button>
                 <div class="history-list" id="historyList"></div>
             </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">游戏结束</h3>
+            <p id="modalMessage"></p>
+            <button id="modalClose">确定</button>
         </div>
     </div>
     <script src="stars.js"></script>
