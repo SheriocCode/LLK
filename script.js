@@ -15,6 +15,7 @@ class LianLianKan {
         this.targetScore = 60;
         this.timer = null;
         this.history = this.loadHistory();
+        this.HINT_PENALTY = 5; // 使用提示的扣分数
         this.initializeGame();
     }
 
@@ -534,6 +535,12 @@ class LianLianKan {
             cell.classList.remove('highlight');
         });
 
+        // 在计时模式下使用提示会扣分
+        if (this.isTimedMode) {
+            this.currentScore = Math.max(0, this.currentScore - this.HINT_PENALTY);
+            this.updateScoreDisplay();
+        }
+
         // 遍历所有可见的方块
         const visibleBlocks = [];
         for (let i = 0; i < this.rows; i++) {
@@ -579,7 +586,7 @@ class LianLianKan {
     toggleGameMode() {
         this.isTimedMode = !this.isTimedMode;
         const modeButton = document.getElementById('modeButton');
-        modeButton.textContent = this.isTimedMode ? '普通模式' : '计时模式';
+        modeButton.textContent = `当前模式：${this.isTimedMode ? '计时模式' : '普通模式'}`;
         
         if (this.isTimedMode) {
             this.resetTimer();
