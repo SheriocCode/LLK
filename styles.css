@@ -89,6 +89,17 @@ body {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
+.background-preview img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.background-preview img.selected {
+    border: 2px solid #4dff4d;
+    box-shadow: 0 0 15px rgba(77, 255, 77, 0.5);
+    transform: scale(1.05);
+}
+
 .background-controls {
     display: flex;
     gap: 10px;
@@ -170,23 +181,93 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 .game-info {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff4d4d, #ff9d4d, #4dff4d, #4d9dff, #ff4d4d);
+    background-size: 200% 100%;
+    animation: gradientMove 2s linear infinite;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 200% 0%;
+    }
 }
 
 .score-display, .timer-display {
-    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.score-display:hover, .timer-display:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.score-display span, .timer-display span {
+    color: #ffffff;
     font-size: 16px;
-    text-align: center;
-    color: white;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.timer-display {
-    margin-bottom: 0;
+#currentScore {
+    color: #4dff4d;
+    font-weight: bold;
+    font-size: 20px;
+    text-shadow: 0 0 10px rgba(77, 255, 77, 0.5);
+}
+
+#targetScore {
+    color: #ff9d4d;
+    font-weight: bold;
+}
+
+#timeLeft {
+    color: #ff4d4d;
+    font-weight: bold;
+    font-size: 24px;
+    text-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .game-board {
@@ -207,6 +288,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
     height: 560px;
     margin: 0;
     overflow: hidden;
+    transition: background-image 0.3s ease, opacity 0.3s ease;
 }
 
 .game-board::before {
@@ -216,14 +298,14 @@ input[type="file"]::-webkit-file-upload-button:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: var(--background-image);
+    background-image: var(--background-image, none);
     background-size: cover;
     background-position: center;
     opacity: var(--background-opacity, 0.2);
     z-index: 1;
     pointer-events: none;
     border-radius: 8px;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .cell {
@@ -241,9 +323,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    overflow: hidden;
     z-index: 2;
-    padding: 0;
 }
 
 .cell:hover {

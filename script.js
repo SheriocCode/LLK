@@ -35,6 +35,8 @@ class LianLianKan {
         const clearHistoryButton = document.getElementById('clearHistory');
         const prevBackgroundBtn = document.getElementById('prevBackground');
         const nextBackgroundBtn = document.getElementById('nextBackground');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
 
         uploadBtn.addEventListener('change', (e) => this.handleImageUpload(e, imagePreview, uploadStatus, startBtn));
         backgroundBtn.addEventListener('change', (e) => this.handleBackgroundUpload(e, backgroundPreview, backgroundStatus));
@@ -43,12 +45,14 @@ class LianLianKan {
         hintButton.addEventListener('click', () => this.showHint());
         modeButton.addEventListener('click', () => this.toggleGameMode());
         clearHistoryButton.addEventListener('click', () => this.clearHistory());
-        prevBackgroundBtn.addEventListener('click', () => this.switchBackground(-1));
-        nextBackgroundBtn.addEventListener('click', () => this.switchBackground(1));
-        this.updateHistoryDisplay();
-
-        const opacitySlider = document.getElementById('opacitySlider');
-        const opacityValue = document.getElementById('opacityValue');
+        
+        // 修复背景切换按钮的事件监听
+        if (prevBackgroundBtn) {
+            prevBackgroundBtn.addEventListener('click', () => this.switchBackground(-1));
+        }
+        if (nextBackgroundBtn) {
+            nextBackgroundBtn.addEventListener('click', () => this.switchBackground(1));
+        }
         
         if (opacitySlider && opacityValue) {
             opacitySlider.addEventListener('input', () => {
@@ -58,6 +62,8 @@ class LianLianKan {
                 this.updateBackgroundOpacity();
             });
         }
+
+        this.updateHistoryDisplay();
     }
 
     handleBackgroundUpload(event, previewContainer, statusElement) {
@@ -96,7 +102,9 @@ class LianLianKan {
                 
                 // 如果是第一张图片，设置为当前背景
                 if (this.backgroundImages.length === 1) {
+                    this.currentBackgroundIndex = 0;
                     this.setBackgroundImage(e.target.result);
+                    img.classList.add('selected');
                 }
 
                 statusElement.textContent = `已上传${this.backgroundImages.length}张背景图片`;
@@ -107,25 +115,50 @@ class LianLianKan {
     }
 
     switchBackground(direction) {
-        if (this.backgroundImages.length === 0) return;
+        if (this.backgroundImages.length === 0) {
+            console.log('没有背景图片');
+            return;
+        }
+        
+        console.log('当前背景索引:', this.currentBackgroundIndex);
+        console.log('背景图片数量:', this.backgroundImages.length);
         
         this.currentBackgroundIndex = (this.currentBackgroundIndex + direction + this.backgroundImages.length) % this.backgroundImages.length;
-        this.setBackgroundImage(this.backgroundImages[this.currentBackgroundIndex]);
+        const newBackground = this.backgroundImages[this.currentBackgroundIndex];
+        console.log('切换到背景:', this.currentBackgroundIndex);
+        
+        this.setBackgroundImage(newBackground);
+        
+        // 更新背景预览的选中状态
+        const previewImages = document.querySelectorAll('.background-preview img');
+        previewImages.forEach((img, index) => {
+            if (index === this.currentBackgroundIndex) {
+                img.classList.add('selected');
+            } else {
+                img.classList.remove('selected');
+            }
+        });
     }
 
     setBackgroundImage(imageUrl) {
+        console.log('设置背景图片:', imageUrl);
         this.backgroundImage = imageUrl;
-        const gameBoard = document.querySelector('.game-board');
+        const gameBoard = document.getElementById('gameBoard');
         if (gameBoard) {
-            gameBoard.style.setProperty('--background-image', `url(${imageUrl})`);
+            // 直接设置背景图片
+            gameBoard.style.backgroundImage = `url(${imageUrl})`;
+            gameBoard.style.backgroundSize = 'cover';
+            gameBoard.style.backgroundPosition = 'center';
+            console.log('设置游戏板背景图片');
             this.updateBackgroundOpacity();
         }
     }
 
     updateBackgroundOpacity() {
-        const gameBoard = document.querySelector('.game-board');
+        const gameBoard = document.getElementById('gameBoard');
         if (gameBoard) {
-            gameBoard.style.setProperty('--background-opacity', this.backgroundOpacity);
+            gameBoard.style.opacity = this.backgroundOpacity;
+            console.log('设置背景透明度:', this.backgroundOpacity);
         }
     }
 
