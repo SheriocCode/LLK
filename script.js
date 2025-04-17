@@ -5,6 +5,7 @@ class LianLianKan {
         this.images = [];
         this.backgroundImages = []; // 存储多张背景图片
         this.currentBackgroundIndex = 0; // 当前背景图片索引
+        this.backgroundOpacity = 0.2; // 默认透明度
         this.backgroundImage = null;
         this.rows = 10;
         this.cols = 12;
@@ -45,6 +46,18 @@ class LianLianKan {
         prevBackgroundBtn.addEventListener('click', () => this.switchBackground(-1));
         nextBackgroundBtn.addEventListener('click', () => this.switchBackground(1));
         this.updateHistoryDisplay();
+
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+        
+        if (opacitySlider && opacityValue) {
+            opacitySlider.addEventListener('input', () => {
+                const value = parseInt(opacitySlider.value);
+                this.backgroundOpacity = value / 100;
+                opacityValue.textContent = `${value}%`;
+                this.updateBackgroundOpacity();
+            });
+        }
     }
 
     handleBackgroundUpload(event, previewContainer, statusElement) {
@@ -103,8 +116,17 @@ class LianLianKan {
     setBackgroundImage(imageUrl) {
         this.backgroundImage = imageUrl;
         const gameBoard = document.querySelector('.game-board');
-        gameBoard.style.setProperty('--background-image', `url(${imageUrl})`);
-        gameBoard.style.backgroundImage = `url(${imageUrl})`;
+        if (gameBoard) {
+            gameBoard.style.setProperty('--background-image', `url(${imageUrl})`);
+            this.updateBackgroundOpacity();
+        }
+    }
+
+    updateBackgroundOpacity() {
+        const gameBoard = document.querySelector('.game-board');
+        if (gameBoard) {
+            gameBoard.style.setProperty('--background-opacity', this.backgroundOpacity);
+        }
     }
 
     handleImageUpload(event, imagePreview, uploadStatus, startBtn) {

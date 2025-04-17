@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>连连看</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="stars.css">
 </head>
 <body>
     <div class="container">
@@ -23,6 +24,11 @@
                     <div class="background-controls">
                         <button id="prevBackground" class="background-btn">上一张</button>
                         <button id="nextBackground" class="background-btn">下一张</button>
+                    </div>
+                    <div class="background-opacity">
+                        <label for="opacitySlider">背景透明度：</label>
+                        <input type="range" id="opacitySlider" min="0" max="100" value="20">
+                        <span id="opacityValue">20%</span>
                     </div>
                     <p id="backgroundStatus">请上传背景图片</p>
                 </div>
@@ -56,6 +62,7 @@
             </div>
         </div>
     </div>
+    <script src="stars.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 
