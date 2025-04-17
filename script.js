@@ -382,13 +382,13 @@ class LianLianKan {
             this.renderBoard();
 
             if (this.isTimedMode) {
-                this.currentScore += 2;
+                this.currentScore += 5; // 消除一对得5分
                 this.updateScoreDisplay();
                 
-                if (this.currentScore >= this.targetScore) {
+                if (this.timeLeft <= 0) {
                     this.stopTimer();
                     this.addToHistory(this.currentScore);
-                    alert('恭喜你完成了计时模式！');
+                    alert('时间到！游戏结束！');
                     this.endGame();
                 }
             } else {
@@ -537,7 +537,7 @@ class LianLianKan {
 
         // 在计时模式下使用提示会扣分
         if (this.isTimedMode) {
-            this.currentScore = Math.max(0, this.currentScore - this.HINT_PENALTY);
+            this.currentScore = Math.max(0, this.currentScore - 3); // 使用提示扣3分
             this.updateScoreDisplay();
         }
 
@@ -586,12 +586,16 @@ class LianLianKan {
     toggleGameMode() {
         this.isTimedMode = !this.isTimedMode;
         const modeButton = document.getElementById('modeButton');
+        const gameInfo = document.getElementById('gameInfo');
+        
         modeButton.textContent = `当前模式：${this.isTimedMode ? '计时模式' : '普通模式'}`;
         
         if (this.isTimedMode) {
+            gameInfo.style.display = 'block';
             this.resetTimer();
             this.updateScoreDisplay();
         } else {
+            gameInfo.style.display = 'none';
             this.stopTimer();
             document.getElementById('timeLeft').textContent = '60';
             document.getElementById('currentScore').textContent = '0';

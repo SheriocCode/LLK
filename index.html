@@ -33,7 +33,10 @@
                 <button id="hintButton" disabled>提示</button>
                 <button id="modeButton">选择模式</button>
             </div>
-            <div class="game-info">
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <div class="right-panel">
+            <div class="game-info" id="gameInfo" style="display: none;">
                 <div class="score-display">
                     <span>当前分数: </span>
                     <span id="currentScore">0</span>
@@ -46,9 +49,6 @@
                     <span>秒</span>
                 </div>
             </div>
-        </div>
-        <div class="game-board" id="gameBoard"></div>
-        <div class="right-panel">
             <div class="history-section">
                 <h3>历史记录</h3>
                 <button id="clearHistory">清空历史</button>
