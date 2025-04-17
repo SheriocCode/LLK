@@ -203,25 +203,81 @@ input[type="file"]::-webkit-file-upload-button:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 .game-controls button {
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .game-controls button:hover {
-    background-color: #45a049;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .game-controls button:disabled {
-    background-color: #cccccc;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+#startGame {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+#startGame:hover {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: rgba(76, 175, 80, 0.4);
+}
+
+#shuffleButton {
+    background: rgba(33, 150, 243, 0.2);
+    border-color: rgba(33, 150, 243, 0.3);
+}
+
+#shuffleButton:hover {
+    background: rgba(33, 150, 243, 0.3);
+    border-color: rgba(33, 150, 243, 0.4);
+}
+
+#hintButton {
+    background: rgba(255, 152, 0, 0.2);
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+#hintButton:hover {
+    background: rgba(255, 152, 0, 0.3);
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+#modeButton {
+    background: rgba(156, 39, 176, 0.2);
+    border-color: rgba(156, 39, 176, 0.3);
+}
+
+#modeButton:hover {
+    background: rgba(156, 39, 176, 0.3);
+    border-color: rgba(156, 39, 176, 0.4);
 }
 
 .game-info {
@@ -428,33 +484,89 @@ input[type="file"]::-webkit-file-upload-button:hover {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .history-section h3 {
     margin-bottom: 15px;
     color: #ffffff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .history-list {
-    max-height: calc(100vh - 180px);
+    flex: 1;
     overflow-y: auto;
     padding: 10px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .history-item {
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     color: #ffffff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
 }
 
-.history-item:last-child {
-    border-bottom: none;
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.history-item.highest {
+    background: rgba(77, 255, 77, 0.1);
+    border-color: rgba(77, 255, 77, 0.3);
+}
+
+.history-item .date {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.history-item .score {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4dff4d;
+}
+
+.history-item.highest .score {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 #clearHistory {
@@ -466,11 +578,14 @@ input[type="file"]::-webkit-file-upload-button:hover {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-top: 10px;
+    text-align: center;
 }
 
 #clearHistory:hover {
     background: rgba(255, 59, 48, 0.3);
     border-color: rgba(255, 59, 48, 0.4);
+    transform: translateY(-2px);
 }
 
 .hint-button {

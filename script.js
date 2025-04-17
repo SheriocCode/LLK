@@ -765,7 +765,30 @@ class LianLianKan {
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = '';
         
-        this.history.forEach(record => {
+        // 找出最高分
+        const highestScore = Math.max(...this.history.map(record => record.score));
+        
+        // 找出最高分记录
+        const highestRecord = this.history.find(record => record.score === highestScore);
+        
+        // 按时间倒序排序（排除最高分记录）
+        const sortedHistory = [...this.history]
+            .filter(record => record !== highestRecord)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // 如果有最高分记录，先显示最高分
+        if (highestRecord) {
+            const highestItem = document.createElement('div');
+            highestItem.className = 'history-item highest';
+            highestItem.innerHTML = `
+                <span class="date">${highestRecord.date}</span>
+                <span class="score">${highestRecord.score}分</span>
+            `;
+            historyList.appendChild(highestItem);
+        }
+        
+        // 显示其他记录
+        sortedHistory.forEach(record => {
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `
