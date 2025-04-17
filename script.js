@@ -417,123 +417,104 @@ class LianLianKan {
         const path = [];
         path.push({ row: row1, col: col1 });
 
+        // 检查直线连接
         if (row1 === row2) {
-            // 水平直线
             const minCol = Math.min(col1, col2);
             const maxCol = Math.max(col1, col2);
             for (let col = minCol + 1; col < maxCol; col++) {
                 path.push({ row: row1, col });
             }
         } else if (col1 === col2) {
-            // 垂直直线
             const minRow = Math.min(row1, row2);
             const maxRow = Math.max(row1, row2);
             for (let row = minRow + 1; row < maxRow; row++) {
                 path.push({ row, col: col1 });
             }
         } else {
-            // 尝试找到最短路径
-            let corners = this.checkOneCorner(row1, col1, row2, col2);
-            
-            if (!corners) {
-                corners = this.checkTwoCorners(row1, col1, row2, col2);
-            }
-
-            if (corners) {
-                if (corners.corner2) {
-                    // 双拐点路径
-                    // 第一段：起点到第一个拐点
-                    if (corners.corner1.row === row1) {
-                        // 水平移动
-                        const minCol = Math.min(col1, corners.corner1.col);
-                        const maxCol = Math.max(col1, corners.corner1.col);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: row1, col });
-                        }
-                    } else {
-                        // 垂直移动
-                        const minRow = Math.min(row1, corners.corner1.row);
-                        const maxRow = Math.max(row1, corners.corner1.row);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: col1 });
-                        }
-                    }
-                    
-                    // 添加第一个拐点
-                    path.push(corners.corner1);
-                    
-                    // 第二段：第一个拐点到第二个拐点
-                    if (corners.corner2.row === corners.corner1.row) {
-                        // 水平移动
-                        const minCol = Math.min(corners.corner1.col, corners.corner2.col);
-                        const maxCol = Math.max(corners.corner1.col, corners.corner2.col);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: corners.corner1.row, col });
-                        }
-                    } else {
-                        // 垂直移动
-                        const minRow = Math.min(corners.corner1.row, corners.corner2.row);
-                        const maxRow = Math.max(corners.corner1.row, corners.corner2.row);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: corners.corner1.col });
-                        }
-                    }
-                    
-                    // 添加第二个拐点
-                    path.push(corners.corner2);
-                    
-                    // 第三段：第二个拐点到终点
-                    if (corners.corner2.row === row2) {
-                        // 水平移动
-                        const minCol = Math.min(corners.corner2.col, col2);
-                        const maxCol = Math.max(corners.corner2.col, col2);
-                        for (let col = minCol + 1; col < maxCol; col++) {
-                            path.push({ row: row2, col });
-                        }
-                    } else {
-                        // 垂直移动
-                        const minRow = Math.min(corners.corner2.row, row2);
-                        const maxRow = Math.max(corners.corner2.row, row2);
-                        for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: corners.corner2.col });
-                        }
+            // 检查单拐点连接
+            const oneCorner = this.checkOneCorner(row1, col1, row2, col2);
+            if (oneCorner) {
+                const corner = oneCorner.corner1;
+                // 第一段：起点到拐点
+                if (corner.row === row1) {
+                    const minCol = Math.min(col1, corner.col);
+                    const maxCol = Math.max(col1, corner.col);
+                    for (let col = minCol + 1; col < maxCol; col++) {
+                        path.push({ row: row1, col });
                     }
                 } else {
-                    // 单拐点路径
-                    // 第一段：起点到拐点
-                    if (corners.corner1.row === row1) {
-                        // 水平移动
-                        const minCol = Math.min(col1, corners.corner1.col);
-                        const maxCol = Math.max(col1, corners.corner1.col);
+                    const minRow = Math.min(row1, corner.row);
+                    const maxRow = Math.max(row1, corner.row);
+                    for (let row = minRow + 1; row < maxRow; row++) {
+                        path.push({ row, col: col1 });
+                    }
+                }
+                path.push(corner);
+                // 第二段：拐点到终点
+                if (corner.row === row2) {
+                    const minCol = Math.min(corner.col, col2);
+                    const maxCol = Math.max(corner.col, col2);
+                    for (let col = minCol + 1; col < maxCol; col++) {
+                        path.push({ row: row2, col });
+                    }
+                } else {
+                    const minRow = Math.min(corner.row, row2);
+                    const maxRow = Math.max(corner.row, row2);
+                    for (let row = minRow + 1; row < maxRow; row++) {
+                        path.push({ row, col: corner.col });
+                    }
+                }
+            } else {
+                // 检查双拐点连接
+                const twoCorners = this.checkTwoCorners(row1, col1, row2, col2);
+                if (twoCorners) {
+                    const corner1 = twoCorners.corner1;
+                    const corner2 = twoCorners.corner2;
+                    
+                    // 第一段：起点到第一个拐点
+                    if (corner1.row === row1) {
+                        const minCol = Math.min(col1, corner1.col);
+                        const maxCol = Math.max(col1, corner1.col);
                         for (let col = minCol + 1; col < maxCol; col++) {
                             path.push({ row: row1, col });
                         }
                     } else {
-                        // 垂直移动
-                        const minRow = Math.min(row1, corners.corner1.row);
-                        const maxRow = Math.max(row1, corners.corner1.row);
+                        const minRow = Math.min(row1, corner1.row);
+                        const maxRow = Math.max(row1, corner1.row);
                         for (let row = minRow + 1; row < maxRow; row++) {
                             path.push({ row, col: col1 });
                         }
                     }
+                    path.push(corner1);
                     
-                    // 添加拐点
-                    path.push(corners.corner1);
+                    // 第二段：第一个拐点到第二个拐点
+                    if (corner2.row === corner1.row) {
+                        const minCol = Math.min(corner1.col, corner2.col);
+                        const maxCol = Math.max(corner1.col, corner2.col);
+                        for (let col = minCol + 1; col < maxCol; col++) {
+                            path.push({ row: corner1.row, col });
+                        }
+                    } else {
+                        const minRow = Math.min(corner1.row, corner2.row);
+                        const maxRow = Math.max(corner1.row, corner2.row);
+                        for (let row = minRow + 1; row < maxRow; row++) {
+                            path.push({ row, col: corner1.col });
+                        }
+                    }
+                    path.push(corner2);
                     
-                    // 第二段：拐点到终点
-                    if (corners.corner1.row === row2) {
-                        // 水平移动
-                        const minCol = Math.min(corners.corner1.col, col2);
-                        const maxCol = Math.max(corners.corner1.col, col2);
+                    // 第三段：第二个拐点到终点
+                    if (corner2.row === row2) {
+                        const minCol = Math.min(corner2.col, col2);
+                        const maxCol = Math.max(corner2.col, col2);
                         for (let col = minCol + 1; col < maxCol; col++) {
                             path.push({ row: row2, col });
                         }
                     } else {
-                        // 垂直移动
-                        const minRow = Math.min(corners.corner1.row, row2);
-                        const maxRow = Math.max(corners.corner1.row, row2);
+                        const minRow = Math.min(corner2.row, row2);
+                        const maxRow = Math.max(corner2.row, row2);
                         for (let row = minRow + 1; row < maxRow; row++) {
-                            path.push({ row, col: corners.corner1.col });
+                            path.push({ row, col: corner2.col });
                         }
                     }
                 }
